@@ -1,10 +1,13 @@
 const express = require("express");
+const cors = require("cors");
+
 const app = express();
 
 require("./db/config");
 
 const User = require("./db/User");
 app.use(express.json());
+app.use(cors());
 
 app.get("/", (req, resp) => {
   resp.send("app is working.....");
@@ -13,7 +16,26 @@ app.get("/", (req, resp) => {
 app.post("/register", async (req, resp) => {
   let user = new User(req.body);
   let result = await user.save();
+  result = result.toObject();
+  delete result.password;
+
   resp.send(result);
+});
+
+//for login api
+
+app.post("/login", async (req, resp) => {
+  console.log(req.body);
+  if (req.body.password && req.body.email) {
+    let user = await User.findOne(req.body).select("-password");
+    if (user) {
+      resp.send(user);
+    } else {
+      resp.send({ result: "No user found" });
+    }
+  } else {
+    resp.send({ result: "No user found!!!!!!!!!" });
+  }
 });
 
 app.listen(5000);
